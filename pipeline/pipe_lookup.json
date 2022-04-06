@@ -1,0 +1,49 @@
+{
+	"name": "pipe_lookup",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup_csv",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_dinamico_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"containerName": "csvfiless",
+							"fileName": "csvCor.csv",
+							"separetorName": ";"
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"folder": {
+			"name": "adf_02_activities"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-03-23T05:58:23Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

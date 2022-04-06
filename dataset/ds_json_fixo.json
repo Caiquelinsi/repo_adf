@@ -1,0 +1,39 @@
+{
+	"name": "ds_json_fixo",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datalakeUdemyCaique",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ds_para_datalake"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "jsonproduto.json",
+				"fileSystem": "jsonfiless"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"codigo": {
+					"type": "integer"
+				},
+				"nome": {
+					"type": "string"
+				},
+				"preco": {
+					"type": "number"
+				},
+				"qtd_estoque": {
+					"type": "integer"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

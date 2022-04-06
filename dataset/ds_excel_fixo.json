@@ -1,0 +1,34 @@
+{
+	"name": "ds_excel_fixo",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_datalakeUdemyCaique",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "ds_para_datalake"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Plan1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "plan_cor.xlsx",
+				"fileSystem": "exelfiless"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "id",
+				"type": "String"
+			},
+			{
+				"name": "cor",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
