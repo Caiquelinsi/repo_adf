@@ -1,0 +1,163 @@
+{
+	"name": "pipe_pratica1",
+	"properties": {
+		"activities": [
+			{
+				"name": "metadados_handson01",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_dinamico_csv",
+						"type": "DatasetReference",
+						"parameters": {
+							"containerName": "csvfiless",
+							"fileName": "*",
+							"separetorName": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter_movies",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "metadados_handson01",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('metadados_handson01').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@not(contains(item().name,'movies'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "lista de cvs",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter_movies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter_movies').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "csv_para_parquet",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_dinamico_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"containerName": "csvfiless",
+										"fileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"separetorName": ";"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_dinamico_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"containerName": "parquetfiless",
+										"fileName": {
+											"value": "@replace(item().name,'.csv','')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "adf_03_handson01"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-03-25T14:28:58Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

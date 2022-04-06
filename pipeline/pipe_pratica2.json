@@ -1,0 +1,250 @@
+{
+	"name": "pipe_pratica2",
+	"properties": {
+		"activities": [
+			{
+				"name": "listar_parquet",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_dinamico_parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"containerName": "parquetfiless",
+							"fileName": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach_parquet",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "listar_parquet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('listar_parquet').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "parquet_para_sqldb",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_dinamico_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"containerName": "parquetfiless",
+										"fileName": {
+											"value": "@replace(item().name, '.parquet', '')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_dinamico_sqldb",
+									"type": "DatasetReference",
+									"parameters": {
+										"Schemaname": "SalesLT",
+										"Tablename": {
+											"value": "@replace(item().name, '.parquet', '')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "proc cor",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach_parquet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[SalesLT].[usp_remove_cores_duplicadas]"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_asqldb_caique",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "proc cidades",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach_parquet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[SalesLT].[usp_remove_cidades_duplicadas]"
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_asqldb_caique",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Get Metadata cidades",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "proc cidades",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_dinamico_sqldb",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schemaname": "SalesLT",
+							"Tablename": "cidades"
+						}
+					},
+					"fieldList": [
+						"structure"
+					]
+				}
+			},
+			{
+				"name": "Get Metadata csvCOR",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "proc cor",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_dinamico_sqldb",
+						"type": "DatasetReference",
+						"parameters": {
+							"Schemaname": "SalesLT",
+							"Tablename": "csvCor"
+						}
+					},
+					"fieldList": [
+						"structure"
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "adf_03_handson01"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-04-06T11:53:05Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,9 @@
+{
+	"name": "adf-caique-udemy",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "a7f401aa-0de8-4933-87ea-0332967e045e",
+		"tenantId": "edadfb58-fc45-4572-a7ee-1689f4a9f177"
+	}
+}
